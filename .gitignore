@@ -1,0 +1,39 @@
+# Ignora cualquier carpeta llamada .venv en cualquier nivel de profundidad
+**/.venv/
+**/venv/
+**/env/
+**/.env
+
+# Ignora archivos de entorno de Python
+**/*.py[cod]
+**/__pycache__/
+
+# Si usas Node.js en algunos proyectos
+**/node_modules/
+
+# Archivos de configuración de editores
+.vscode/
+.idea/
+
+# Archivos de logs
+**/log
+**/*.log
+
+# Bases de datos SQLite
+**/*.sqlite
+**/*.db
+
+# Para ignorar tokens.env
+.env.local
+.env.*.local
+.env
+**/.env.local
+**/.env.*.local
+
+# Ignora configuracion de session
+**/*.session
+**/*.session-journal
+
+# Ignora archivos del sistema operativo
+.DS_Store
+Thumbs.db
