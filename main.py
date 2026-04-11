@@ -2,6 +2,7 @@
 from src.configuracion import config
 from utils.logger import config_logger 
 from pyrogram.client import Client
+import pyromod
 
 logger = config_logger(__name__)
 
