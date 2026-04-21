@@ -1,6 +1,13 @@
 
 #!/usr/bin/env python3
 from pyrogram.types.messages_and_media import document
+from sqlalchemy.orm import Session
+from sqlalchemy import select
+from src.entidades.entidades import Usuario 
+from conexion.conexion import SessionLocal
+from utils.logger import config_logger
+
+logger =config_logger(__name__)
 
 
 class SingletonMeta(type):
@@ -24,8 +31,18 @@ class SingletonMeta(type):
 
 
 class Autenticar(metaclass=SingletonMeta):
-    def validar_documento(self, documento):
-        if documento == "123456789":
-            return "eres cliente"
-        return "no eres cliente"
+    def validar_documento(self, documento: str):
+        db = SessionLocal()
+        try:
+            # Buscamos el primer usuario que coincida con el número de documento
+            logger.info(f"se esta validando el id {documento}")
+            usuario = db.query(Usuario).filter(Usuario.numero_documento == documento).first()
+        
+            if usuario:
+                return "eres cliente"
+        
+            return "no eres cliente"
+        finally:
+            db.close()
+
 
