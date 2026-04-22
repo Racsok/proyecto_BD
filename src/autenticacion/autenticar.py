@@ -37,11 +37,11 @@ class Autenticar(metaclass=SingletonMeta):
             # Buscamos el primer usuario que coincida con el número de documento
             logger.info(f"se esta validando el id {documento}")
             usuario = db.query(Usuario).filter(Usuario.numero_documento == documento).first()
-        
+
             if usuario:
-                return "eres cliente"
-        
-            return "no eres cliente"
+                logger.info(f"el usuario exite y su rol es {usuario.rol.nombre_rol} {usuario.rol.id_rol}")
+                return usuario.rol.id_rol
+            return -1
         finally:
             db.close()
 

@@ -3,6 +3,7 @@ from pyrogram.client import Client
 from pyrogram import filters
 from pyrogram.types import ForceReply
 
+from src.utils.btn_menu_citas import menu_citas
 from src.autenticacion.autenticar import Autenticar
 au = Autenticar()
 
@@ -20,10 +21,19 @@ async def start_privado(client, message):
         "Para comenzar con tu agendamiento, por favor **escribe tu número de documento**:",
         reply_markup=ForceReply(placeholder="Ej: 10203040")
     )   
-    
-    await client.send_message(
-            chat_id=message.chat.id,
-            text = au.validar_documento(respuesta.text)
+    tipo_cliente = au.validar_documento(respuesta.text)
+    logger.info(f"tipo cliente {tipo_cliente} tipodato {type(tipo_cliente)}")
+
+    match tipo_cliente:
+        case 1: #PACIENTE
+            await message.reply(
+            "✅ ¡Usuario validado! ¿Qué deseas hacer hoy?",
+            reply_markup=menu_citas()             
             )
+        case _:
+            logger.info("parametro fuera del case")
+
+
+
 
 
