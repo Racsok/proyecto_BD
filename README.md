@@ -4,6 +4,13 @@
 * nombre
 * nombre 
 
+## requerimientos
+python3.12-dev
+build-essential
+psycopg2-binary
+libpq-dev
+
+
 ## Clonación del Proyecto
 Primero, obtén una copia local del repositorio ejecutando el siguiente comando en tu terminal:
 

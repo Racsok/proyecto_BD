@@ -10,6 +10,7 @@ logger = config_logger(__name__)
 class TGBuscador:
     def __init__(self) -> None:
         plugins = dict(root="src.manejadores")
+        print(plugins)
         self.bot = Client("TGBuscador", api_id=config.api_id, api_hash=config.api_hash, bot_token=config.bot_token, plugins=plugins)
 
     def run(self):
@@ -19,3 +20,4 @@ if __name__ == "__main__":
     bot = TGBuscador()
     logger.info("Aplicación iniciando")
     bot.run()
+    logger.info("Aplicación iniciada")
