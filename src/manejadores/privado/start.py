@@ -23,7 +23,7 @@ async def start_privado(client, message):
     )   
     tipo_cliente = au.validar_documento(respuesta.text)
     logger.info(f"tipo cliente {tipo_cliente} tipodato {type(tipo_cliente)}")
-
+    
     match tipo_cliente:
         case 1: #PACIENTE
             await message.reply(

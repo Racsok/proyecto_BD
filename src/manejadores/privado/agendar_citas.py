@@ -55,44 +55,49 @@ async def seleccionar_fecha_hora(client: Client, callback_query: CallbackQuery):
     # Eliminamos el teclado inline para limpiar el chat
     await callback_query.message.delete()
     
-    # Usamos pyromod (chat.ask) para solicitar la fecha y hora
-    respuesta_fecha = await callback_query.message.chat.ask(
-        "📅 **Paso 3:** Escribe la fecha y hora de tu cita en formato `YYYY-MM-DD HH:MM`\n\n"
-        "Ejemplo: `2026-05-20 14:30`",
-        reply_markup=ForceReply(placeholder="2026-05-20 14:30")
-    )
+    fecha_valida = False
+    while not fecha_valida:
+
     
-    try:
-        # Validar y convertir la cadena de texto a un objeto datetime
-        fecha_cita = datetime.strptime(respuesta_fecha.text, "%Y-%m-%d %H:%M")
-        
-        # OJO: Validar la restricción SQL chk_fecha_cita_valida (fecha_cita >= CURRENT_TIMESTAMP)
-        if fecha_cita <= datetime.now():
-            await respuesta_fecha.reply("❌ La fecha debe ser en el futuro. Intenta agendar nuevamente.")
-            return
-
-        db = SessionLocal()
-        repo = RepositorioCitas(db)
-        
-        # NOTA: Debes obtener el paciente_id del usuario actual. 
-        # Si guardaste el ID en tu clase Autenticar, úsalo aquí. Por ahora simulo el ID 1.
-        paciente_id = 1 
-        
-        cita = repo.crear_cita(paciente_id=paciente_id, medico_id=medico_id, fecha_cita=fecha_cita)
-        
-        await respuesta_fecha.reply(
-            f"✅ **¡Cita Agendada con Éxito!**\n\n"
-            f"🆔 Número de cita: {cita.id_cita}\n"
-            f"🗓 Fecha: {cita.fecha_cita.strftime('%Y-%m-%d %H:%M')}\n"
-            f"💰 Valor: ${cita.valor}"
+        # Usamos pyromod (chat.ask) para solicitar la fecha y hora
+        respuesta_fecha = await callback_query.message.chat.ask(
+            "📅 **Paso 3:** Escribe la fecha y hora de tu cita en formato `YYYY-MM-DD HH:MM`\n\n"
+            "Ejemplo: `2026-05-20 14:30`",
+            reply_markup=ForceReply(placeholder="2026-05-20 14:30")
         )
-        db.close()
+    
+        try:
+            # Validar y convertir la cadena de texto a un objeto datetime
+            fecha_cita = datetime.strptime(respuesta_fecha.text, "%Y-%m-%d %H:%M")
+            
+            # OJO: Validar la restricción SQL chk_fecha_cita_valida (fecha_cita >= CURRENT_TIMESTAMP)
+            if fecha_cita <= datetime.now():
+                await respuesta_fecha.reply("❌ La fecha debe ser en el futuro. Intenta agendar nuevamente.")
+                continue
 
-    except ValueError:
-        logger.error("Formato de fecha inválido")
-        await respuesta_fecha.reply("❌ Formato de fecha incorrecto. Debes seguir el formato YYYY-MM-DD HH:MM.")
-    except Exception as e:
-        logger.error(f"Error al guardar la cita en DB: {e}")
-        await respuesta_fecha.reply("❌ Ocurrió un error al agendar la cita. Por favor intenta más tarde.")
+            fecha_valida = True
+            db = SessionLocal()
+            repo = RepositorioCitas(db)
+            
+            # NOTA: Debes obtener el paciente_id del usuario actual. 
+            # Si guardaste el ID en tu clase Autenticar, úsalo aquí. Por ahora simulo el ID 1.
+            paciente_id = 2 
+            
+            cita = repo.crear_cita(paciente_id=paciente_id, medico_id=medico_id, fecha_cita=fecha_cita)
+            
+            await respuesta_fecha.reply(
+                f"✅ **¡Cita Agendada con Éxito!**\n\n"
+                f"🆔 Número de cita: {cita.id_cita}\n"
+                f"🗓 Fecha: {cita.fecha_cita.strftime('%Y-%m-%d %H:%M')}\n"
+                f"💰 Valor: ${cita.valor}"
+            )
+            db.close()
+
+        except ValueError:
+            logger.error("Formato de fecha inválido")
+            await respuesta_fecha.reply("❌ Formato de fecha incorrecto. Debes seguir el formato YYYY-MM-DD HH:MM.")
+        except Exception as e:
+            logger.error(f"Error al guardar la cita en DB: {e}")
+            await respuesta_fecha.reply("❌ Ocurrió un error al agendar la cita. Por favor intenta más tarde.")
 
 
