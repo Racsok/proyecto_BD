@@ -21,17 +21,15 @@ async def start_privado(client, message):
         "Para comenzar con tu agendamiento, por favor **escribe tu número de documento**:",
         reply_markup=ForceReply(placeholder="Ej: 10203040")
     )   
-    tipo_cliente = au.validar_documento(respuesta.text)
+    tipo_cliente = au.validar_documento(message.from_user.id, respuesta.text)
     logger.info(f"tipo cliente {tipo_cliente} tipodato {type(tipo_cliente)}")
-    
     match tipo_cliente:
-        case 1: #PACIENTE
+        case 1: # PACIENTE
             await message.reply(
-            "✅ ¡Usuario validado! ¿Qué deseas hacer hoy?",
-            reply_markup=menu_citas()             
+                f"✅ ¡Bienvenido {au.obtener_usuario(message.from_user.id)['nombre']}! ¿Qué deseas hacer hoy?",
+                reply_markup=menu_citas()             
             )
-        case _:
-            logger.info("parametro fuera del case")
+    
 
 
 

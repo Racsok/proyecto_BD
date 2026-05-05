@@ -31,3 +31,25 @@ class RepositorioCitas:
         self.db.commit()
         self.db.refresh(nueva_cita)
         return nueva_cita
+
+    # Agrega este método a tu clase RepositorioCitas en src/agendar/repositorio_citas.py
+    def obtener_citas_paciente(self, paciente_id: int):
+        return (
+            self.db.query(Cita)
+            .filter(Cita.paciente_id == paciente_id)
+            .filter(Cita.estado_cita == 'PROGRAMADA')
+            .order_by(Cita.fecha_cita.asc())
+            .all()
+        )
+
+    def cancelar_cita(self, cita_id: int, paciente_id: int) -> bool:
+        cita = self.db.query(Cita).filter(
+            Cita.id_cita == cita_id, 
+            Cita.paciente_id == paciente_id
+        ).first()
+        
+        if cita:
+            cita.estado_cita = 'CANCELADA'
+            self.db.commit()
+            return True
+        return False

@@ -9,6 +9,8 @@ from conexion.conexion import SessionLocal
 from src.agendar.repositorio_citas import RepositorioCitas
 from src.utils.teclados import teclado_especialidades, teclado_medicos
 from utils.logger import config_logger 
+from src.autenticacion.autenticar import Autenticar
+au = Autenticar()
 
 logger = config_logger(__name__)
 
@@ -16,6 +18,13 @@ logger = config_logger(__name__)
 @Client.on_callback_query(filters.regex("^agendar$"))
 async def iniciar_agendamiento(client: Client, callback_query: CallbackQuery):
     logger.info(f"Usuario {callback_query.from_user.id} inició proceso de agendamiento")
+    datos_usuario = au.obtener_usuario(callback_query.from_user.id)
+    
+    if not datos_usuario:
+        await callback_query.answer("⚠️ Sesión expirada. Por favor usa /start", show_alert=True)
+        return
+
+    paciente_id = datos_usuario["id_usuario"]
     
     db = SessionLocal()
     repo = RepositorioCitas(db)

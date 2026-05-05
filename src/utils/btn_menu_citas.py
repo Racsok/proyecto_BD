@@ -6,9 +6,8 @@ def menu_citas():
         # Fila 1: Dos botones (50% de ancho cada uno)
         [
             InlineKeyboardButton("📅 Agendar Cita", callback_data="agendar"),
-            InlineKeyboardButton("ℹ️ Información", callback_data="info_cita")
+            InlineKeyboardButton("👁️ Ver Mis Citas", callback_data="ver_citas")
         ],
-        # Fila 2: Un solo botón (Ocupará el 100% del ancho)
         [
             InlineKeyboardButton("❌ Cancelar Cita", callback_data="cancelar")
         ]

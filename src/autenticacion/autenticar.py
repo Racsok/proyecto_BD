@@ -31,7 +31,12 @@ class SingletonMeta(type):
 
 
 class Autenticar(metaclass=SingletonMeta):
-    def validar_documento(self, documento: str):
+    def __init__(self):
+        # Diccionario para guardar {telegram_id: objeto_usuario}
+        self.usuarios_activos = {}
+
+
+    def validar_documento(self, telegram_id: int, documento: str):
         db = SessionLocal()
         try:
             # Buscamos el primer usuario que coincida con el número de documento
@@ -39,10 +44,22 @@ class Autenticar(metaclass=SingletonMeta):
             usuario = db.query(Usuario).filter(Usuario.numero_documento == documento).first()
 
             if usuario:
-                logger.info(f"el usuario exite y su rol es {usuario.rol.nombre_rol} {usuario.rol.id_rol}")
+                logger.info(f"Usuario encontrado: {usuario.primer_nombre}, Rol: {usuario.rol.nombre_rol}")
+                
+                # GUARDAR EN SESIÓN: Vinculamos el ID de Telegram con los datos de DB
+                self.usuarios_activos[telegram_id] = {
+                    "id_usuario": usuario.id_usuario,
+                    "rol_id": usuario.rol.id_rol,
+                    "nombre": usuario.primer_nombre
+                }
                 return usuario.rol.id_rol
-            return -1
+            
+            logger.warning(f"Documento {documento} no encontrado en la base de datos.")
+            return -1 # Usuario no encontrado
         finally:
             db.close()
+
+    def obtener_usuario(self, telegram_id: int):
+        return self.usuarios_activos.get(telegram_id)
 
 
