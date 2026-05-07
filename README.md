@@ -1,8 +1,8 @@
 # PROYECTO BASE DE DATOS
 ## INTEGRANTES
 * Oscar Manuel Contreras Gacha 
-* nombre
-* nombre 
+* Steven Navarro Parrales
+* Juan David Orduz Sastoque
 
 ## requerimientos
 python3.12-dev
