@@ -1,5 +1,8 @@
 #!/usr/bin/env python
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+
+
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
 
 def menu_citas():
     return InlineKeyboardMarkup([
