@@ -74,8 +74,7 @@ class RepositorioCitas:
             logger.error(f"Error creando cita: {e}")
             raise
 
-    
-    # OBTENER CITAS DEL PACIENTE
+    # OBTENER CITAS DEL PACIENTE POR VISTA
     def obtener_citas_paciente(self, paciente_id: int) -> list[Cita]:
 
         stmt = (
@@ -89,7 +88,25 @@ class RepositorioCitas:
             self.db.scalars(stmt).all()
         )
 
-    
+    # OBTENER CITAS DEL PACIENTE PARA EDITAR
+    def obtener_citas_paciente_editar(self,paciente_id: int) -> list[Cita]:
+        stmt = (
+            select(Cita)
+            .where(
+                Cita.paciente_id == paciente_id
+            )
+            .where(
+                Cita.estado_cita == "PROGRAMADA"
+            )
+            .order_by(
+                Cita.fecha_cita.asc()
+            )
+        )
+
+        return list(
+            self.db.scalars(stmt).all()
+        )
+
     # OBTENER CITAS DEL MÉDICO
     def obtener_citas_medico(self, medico_id: int) -> list[Cita]:
 
@@ -110,7 +127,6 @@ class RepositorioCitas:
             self.db.scalars(stmt).all()
         )
 
-    
     # CANCELAR CITA
     def cancelar_cita(self, cita_id: int, paciente_id: int) -> bool:
 

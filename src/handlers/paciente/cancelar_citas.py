@@ -41,7 +41,7 @@ async def listar_citas_para_cancelar(update: Update, context: ContextTypes.DEFAU
     try:
         repo = RepositorioCitas(db)
 
-        citas = repo.obtener_citas_paciente(
+        citas = repo.obtener_citas_paciente_editar(
             paciente_id
         )
 
