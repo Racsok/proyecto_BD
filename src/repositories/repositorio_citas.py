@@ -2,7 +2,7 @@
 from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from src.models.entidades import Especialidad, Medico, Cita, Consultorio
+from src.models.entidades import Especialidad, Medico, Cita, Consultorio, VistaCitasProgramadas
 from src.utils.logger import config_logger
 
 logger = config_logger(__name__)
@@ -78,15 +78,9 @@ class RepositorioCitas:
     def obtener_citas_paciente(self, paciente_id: int) -> list[Cita]:
 
         stmt = (
-            select(Cita)
+            select(VistaCitasProgramadas)
             .where(
-                Cita.paciente_id == paciente_id
-            )
-            .where(
-                Cita.estado_cita == "PROGRAMADA"
-            )
-            .order_by(
-                Cita.fecha_cita.asc()
+                VistaCitasProgramadas.paciente_id == paciente_id
             )
         )
 

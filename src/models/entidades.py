@@ -205,3 +205,25 @@ class Administrador(Base):
     usuario: Mapped["Usuario"] = relationship(
         back_populates="administrador"
     )
+
+# VISTA PARA VER CITAS PROGRAMADAS POR PACIENTE
+class VistaCitasProgramadas(Base):
+
+    __tablename__ = "v_citas_programadas"
+
+    id_cita: Mapped[int] = mapped_column(primary_key=True)
+    paciente_id: Mapped[int]
+    id_medico: Mapped[int]
+    primer_nombre_medico: Mapped[str]
+    segundo_nombre_medico: Mapped[str | None]
+    primer_apellido_medico: Mapped[str]
+    segundo_apellido_medico: Mapped[str | None]
+    especialidad: Mapped[str]
+    primer_nombre_paciente: Mapped[str]
+    segundo_nombre_paciente: Mapped[str | None]
+    primer_apellido_paciente: Mapped[str]
+    segundo_apellido_paciente: Mapped[str | None]
+    fecha_cita: Mapped[datetime]
+    valor: Mapped[float]
+    estado_cita: Mapped[str]
+    nombre_consultorio: Mapped[str]

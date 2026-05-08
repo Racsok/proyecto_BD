@@ -174,10 +174,6 @@ async def pedir_fecha(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # GUARDAR CITA
 async def guardar_cita(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
-    query = update.callback_query
-
-    await query.answer()
-
     texto_fecha = update.message.text
 
     try:
@@ -239,7 +235,7 @@ async def guardar_cita(update: Update, context: ContextTypes.DEFAULT_TYPE):
             db.close()
 
         await mostrar_menu_principal(
-            query.message,
+            update.message,
             datos_usuario["rol_id"]
         )
 
@@ -268,7 +264,7 @@ async def guardar_cita(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         await mostrar_menu_principal(
-            query.message,
+            update.message,
             datos_usuario["rol_id"]
         )
 

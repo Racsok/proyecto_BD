@@ -29,6 +29,11 @@ GRANT SELECT, INSERT, UPDATE
 ON TABLE citas
 TO bot_citas;
 
+-- Dar permiso para las vistas:
+GRANT SELECT
+ON v_citas_programadas
+TO bot_citas;
+
 -- Ver todos los permisos de sus usuarios:
 SELECT grantee, table_name, privilege_type
 FROM   information_schema.role_table_grants
