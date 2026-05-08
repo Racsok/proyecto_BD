@@ -48,7 +48,7 @@ def teclado_medicos(medicos: list[Medico]) -> InlineKeyboardMarkup:
     botones.append([
         InlineKeyboardButton(
             text="⬅️ Volver",
-            callback_data="agendar"
+            callback_data="volver_especialidades"
         )
     ])
 

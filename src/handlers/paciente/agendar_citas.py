@@ -105,6 +105,37 @@ async def seleccionar_medico(update: Update, context: ContextTypes.DEFAULT_TYPE)
     finally:
         db.close()
 
+# VOLVER A ESPECIALIDADES
+async def volver_especialidades(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    query = update.callback_query
+
+    await query.answer()
+
+    db = SessionLocal()
+
+    try:
+        repo = RepositorioCitas(db)
+
+        especialidades = (
+            repo.obtener_especialidades()
+        )
+
+        await query.edit_message_text(
+            "⚕️ Paso 1:\n\n"
+            "Selecciona una especialidad:",
+
+            reply_markup=
+            teclado_especialidades(
+                especialidades
+            )
+        )
+
+        return SELECCION_ESPECIALIDAD
+
+    finally:
+        db.close()
+
 # PEDIR FECHA
 async def pedir_fecha(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
@@ -142,6 +173,10 @@ async def pedir_fecha(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # GUARDAR CITA
 async def guardar_cita(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    query = update.callback_query
+
+    await query.answer()
 
     texto_fecha = update.message.text
 
@@ -204,7 +239,7 @@ async def guardar_cita(update: Update, context: ContextTypes.DEFAULT_TYPE):
             db.close()
 
         await mostrar_menu_principal(
-            update.message,
+            query.message,
             datos_usuario["rol_id"]
         )
 
@@ -233,7 +268,7 @@ async def guardar_cita(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         await mostrar_menu_principal(
-            update.message,
+            query.message,
             datos_usuario["rol_id"]
         )
 
@@ -263,7 +298,7 @@ async def cancelar_flujo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     await mostrar_menu_principal(
-            update.message,
+            query.message,
             datos_usuario["rol_id"]
         )
 
@@ -290,6 +325,10 @@ conv_agendar_cita = ConversationHandler(
             CallbackQueryHandler(
                 pedir_fecha,
                 pattern=r"^med_\d+$"
+            ),
+            CallbackQueryHandler(
+                volver_especialidades,
+                pattern="^volver_especialidades$"
             )
         ],
         # INGRESAR FECHA
