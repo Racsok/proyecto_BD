@@ -34,9 +34,7 @@ def teclado_medicos(medicos: list[Medico]) -> InlineKeyboardMarkup:
 
     for medico in medicos:
         nombre_completo = (
-            f"Dr. "
-            f"{medico.usuario.primer_nombre} "
-            f"{medico.usuario.primer_apellido}"
+            f"Dr. {medico.usuario.primer_nombre} {medico.usuario.primer_apellido}"
         )
 
         botones.append([

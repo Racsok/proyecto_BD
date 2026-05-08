@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 from telegram import Update
 from telegram.ext import ContextTypes, CallbackQueryHandler
 from src.database.conexion import SessionLocal
@@ -6,18 +7,16 @@ from src.repositories.repositorio_citas import RepositorioCitas
 from src.autenticacion.sesion import autenticador as au
 from src.utils.logger import config_logger
 
-
 logger = config_logger(__name__)
 
-# MOSTRAR CITAS DEL PACIENTE
-async def mostrar_citas_paciente(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
+# MOSTRAR CITAS DEL MÉDICO
+async def mostrar_citas_medico(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    
     query = update.callback_query
 
-    # Obligatorio responder callback
     await query.answer()
 
-    logger.info(f"Usuario "f"{query.from_user.id} "f"consultó sus citas")
+    logger.info(f"Usuario {query.from_user.id} consultó sus citas")
 
     # Obtener usuario autenticado
     datos_usuario = au.obtener_usuario(
@@ -26,67 +25,58 @@ async def mostrar_citas_paciente(update: Update, context: ContextTypes.DEFAULT_T
 
     if not datos_usuario:
         await query.answer(
-
-            "⚠️ Sesión expirada. "
+            "⚠️ Sesión expirada.\n"
             "Usa /start",
 
             show_alert=True
         )
-
         return
 
-    paciente_id = datos_usuario[
-        "id_usuario"
-    ]
+    # Obtener ID médico
+    medico_id = datos_usuario["id_medico"]
 
     db = SessionLocal()
 
     try:
         repo = RepositorioCitas(db)
 
-        citas = repo.obtener_citas_paciente(
-            paciente_id
+        citas = repo.obtener_citas_medico(
+            medico_id
         )
 
-        # Usuario sin citas
+        # Sin citas
         if not citas:
-            logger.info(
-                "Usuario sin citas"
-            )
+            logger.info("Médico sin citas")
 
             await query.edit_message_text(
-                "📋 No tienes "
-                "citas programadas."
+                "📋 No tienes citas programadas."
             )
-
             return
 
-        logger.info(
-            f"Total citas: {len(citas)}"
-        )
+        logger.info(f"Total citas: {len(citas)}")
 
-        
         # Construir respuesta
         texto_citas = (
             "🗓 Tus Citas Programadas:\n\n"
         )
 
         for cita in citas:
-            nombre_medico = (
-
-                f"{cita.medico.usuario.primer_nombre} "
-                f"{cita.medico.usuario.primer_apellido}"
+            # Nombre paciente
+            nombre_paciente = (
+                f"{cita.paciente.primer_nombre} {cita.paciente.primer_apellido}"
             )
+
+            
+            # Especialidad
             especialidad = (
                 cita.medico
                 .especialidad
                 .nombre_especialidad
             )
-            texto_citas += (
 
-                f"🆔 ID: {cita.id_cita}\n"
-                f"👨‍⚕️ Médico: "
-                f"{nombre_medico}\n"
+            texto_citas += (
+                f"🧑 Paciente: "
+                f"{nombre_paciente}\n"
                 f"🩺 Especialidad: "
                 f"{especialidad}\n"
                 f"📅 Fecha: "
@@ -96,7 +86,6 @@ async def mostrar_citas_paciente(update: Update, context: ContextTypes.DEFAULT_T
                 f"──────────────────\n"
             )
 
-        
         # Mostrar citas
         await query.edit_message_text(
             texto_citas
@@ -106,19 +95,17 @@ async def mostrar_citas_paciente(update: Update, context: ContextTypes.DEFAULT_T
         logger.error(
             f"Error mostrando citas: {e}"
         )
-
         await query.edit_message_text(
             "❌ Error obteniendo citas."
         )
 
     finally:
-
         db.close()
 
 
 
 # HANDLER EXPORTABLE
-ver_citas_handler = CallbackQueryHandler(
-    mostrar_citas_paciente,
-    pattern="^ver_citas$"
+ver_citas_medico_handler = CallbackQueryHandler(
+    mostrar_citas_medico,
+    pattern="^ver_citas_medico$"
 )

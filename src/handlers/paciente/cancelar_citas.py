@@ -16,7 +16,7 @@ async def listar_citas_para_cancelar(update: Update, context: ContextTypes.DEFAU
 
     await query.answer()
 
-    logger.info(f"Usuario "f"{query.from_user.id} "f"quiere cancelar citas")
+    logger.info(f"Usuario {query.from_user.id} quiere cancelar citas")
 
     # Obtener usuario autenticado
     datos_usuario = au.obtener_usuario(
@@ -27,7 +27,6 @@ async def listar_citas_para_cancelar(update: Update, context: ContextTypes.DEFAU
         await query.answer(
             "⚠️ Sesión expirada.\n"
             "Usa /start",
-
             show_alert=True
         )
         return
@@ -48,10 +47,8 @@ async def listar_citas_para_cancelar(update: Update, context: ContextTypes.DEFAU
         # Sin citas
         if not citas:
             await query.answer(
-
                 "No tienes citas "
                 "para cancelar.",
-
                 show_alert=True
             )
             return
@@ -94,9 +91,7 @@ async def listar_citas_para_cancelar(update: Update, context: ContextTypes.DEFAU
         )
 
     except Exception as e:
-        logger.error(
-            f"Error listando citas: {e}"
-        )
+        logger.error(f"Error listando citas: {e}")
 
         await query.edit_message_text(
             "❌ Error obteniendo citas."
@@ -108,8 +103,6 @@ async def listar_citas_para_cancelar(update: Update, context: ContextTypes.DEFAU
 
 
 # CONFIRMAR CANCELACIÓN
-
-
 async def confirmar_cancelacion(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     query = update.callback_query
@@ -120,7 +113,6 @@ async def confirmar_cancelacion(update: Update, context: ContextTypes.DEFAULT_TY
     cita_id = int(
         query.data.split("_")[2]
     )
-
     
     # Obtener usuario autenticado
     datos_usuario = au.obtener_usuario(
@@ -149,31 +141,22 @@ async def confirmar_cancelacion(update: Update, context: ContextTypes.DEFAULT_TY
 
         # Cancelación exitosa
         if exito:
-            logger.info(
-                f"Cita cancelada: "
-                f"{cita_id}"
-            )
+            logger.info(f"Cita cancelada: {cita_id}")
 
             await query.edit_message_text(
-                f"✅ La cita "
-                f"`{cita_id}` "
-                f"ha sido cancelada."
+                f"✅ La cita ha sido cancelada."
             )
 
             return
 
         # No se pudo cancelar
         await query.answer(
-            "No se pudo cancelar "
-            "la cita.",
-
+            "No se pudo cancelar la cita.",
             show_alert=True
         )
 
     except Exception as e:
-        logger.error(
-            f"Error cancelando cita: {e}"
-        )
+        logger.error(f"Error cancelando cita: {e}")
 
         await query.edit_message_text(
             "❌ Error cancelando cita."

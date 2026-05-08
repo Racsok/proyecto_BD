@@ -4,17 +4,28 @@ from src.models.entidades import Usuario
 from src.database.conexion import SessionLocal
 from src.utils.logger import config_logger
 
-
 logger = config_logger(__name__)
 
 class Autenticar:
 
     def __init__(self):
         # Usuarios autenticados en memoria
-        # {telegram_id: datos_usuario}
+        #
+        # {
+        #   telegram_id: {
+        #       id_usuario,
+        #       id_medico?,
+        #       rol_id,
+        #       nombre,
+        #       documento
+        #   }
+        # }
+        #
+
         self.usuarios_activos: dict[int, dict] = {}
 
-    def validar_documento(self, telegram_id: int,documento: str) -> int:
+    # VALIDAR DOCUMENTO
+    def validar_documento(self, telegram_id: int, documento: str) -> int:
 
         db = SessionLocal()
 
@@ -27,49 +38,69 @@ class Autenticar:
 
             usuario = db.scalar(stmt)
 
-            if usuario:
-                logger.info(f"Usuario encontrado: "f"{usuario.primer_nombre} "f"{usuario.primer_apellido}")
+            # Usuario no encontrado
+            if not usuario:
+                logger.warning(f"Documento {documento} no encontrado")
+                return -1
 
-                # Guardar usuario autenticado en memoria
-                self.usuarios_activos[telegram_id] = {
-                    "id_usuario": usuario.id_usuario,
-                    "rol_id": usuario.rol.id_rol,
-                    "nombre": (
-                        f"{usuario.primer_nombre} "
-                        f"{usuario.primer_apellido}"
-                    ),
-                    "documento": usuario.numero_documento
-                }
+            logger.info(f"Usuario encontrado: {usuario.primer_nombre} {usuario.primer_apellido}")
 
-                return usuario.rol.id_rol
+            # Construir sesión
+            datos_sesion = {
+                "id_usuario":
+                usuario.id_usuario,
+                "rol_id":
+                usuario.rol.id_rol,
+                "nombre": (f"{usuario.primer_nombre} {usuario.primer_apellido}"),
+                "documento":
+                usuario.numero_documento
+            }
 
-            logger.warning(f"Documento {documento} no encontrado")
+            # Si es médico guardar id_medico
+            if usuario.medico:
+                datos_sesion["id_medico"] = (
+                    usuario.medico.id_medico
+                )
+                
+                logger.info(f"ID médico asociado: {usuario.medico.id_medico}")
 
-            return -1
+            # Guardar sesión
+            self.usuarios_activos[telegram_id] = datos_sesion
+
+            logger.info(f"Usuario autenticado: {telegram_id}")
+
+            return usuario.rol.id_rol
 
         except Exception as e:
-            logger.error(
-                f"Error validando documento: {e}"
-            )
+            logger.error(f"Error validando documento: {e}")
             return -1
 
         finally:
             db.close()
 
-    def obtener_usuario(self,telegram_id: int) -> dict | None:
+    # OBTENER USUARIO
+    def obtener_usuario(self, telegram_id: int) -> dict | None:
         return self.usuarios_activos.get(
             telegram_id
         )
 
-    def cerrar_sesion(self,telegram_id: int) -> bool:
-        if telegram_id in self.usuarios_activos:
-            del self.usuarios_activos[telegram_id]
+    # CERRAR SESIÓN
+    def cerrar_sesion(self, telegram_id: int) -> bool:
 
-            logger.info(f"Sesión cerrada para "f"{telegram_id}")
+        if telegram_id not in self.usuarios_activos:
+            return False
 
-            return True
+        del self.usuarios_activos[
+            telegram_id
+        ]
 
-        return False
+        logger.info(f"Sesión cerrada para {telegram_id}")
 
-    def esta_autenticado(self,telegram_id: int) -> bool:
-        return telegram_id in self.usuarios_activos
+        return True
+
+    # VALIDAR SESIÓN
+    def esta_autenticado(self, telegram_id: int) -> bool:
+        return (
+            telegram_id
+            in self.usuarios_activos
+        )
