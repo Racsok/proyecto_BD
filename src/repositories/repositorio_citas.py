@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from src.models.entidades import Especialidad, Medico, Cita, Consultorio, VistaCitasProgramadas
 from src.utils.logger import config_logger
+from datetime import datetime, time, date
 
 logger = config_logger(__name__)
 class RepositorioCitas:
@@ -142,3 +143,36 @@ class RepositorioCitas:
             self.db.rollback()
             logger.error(f"Error cancelando cita: {e}")
             return False
+        
+    # OBTENER HORAS OCUPADAS DE UN MÉDICO EN UNA FECHA
+    def obtener_horas_ocupadas(self, medico_id: int, fecha: date):
+
+        inicio = datetime.combine(fecha, time.min)
+        fin = datetime.combine(fecha, time.max)
+
+        stmt = (
+            select(Cita)
+            .where(
+                Cita.medico_id == medico_id
+            )
+            .where(
+                Cita.estado_cita == "PROGRAMADA"
+            )
+            .where(
+                Cita.fecha_cita >= inicio
+            )
+            .where(
+                Cita.fecha_cita <= fin
+            )
+        )
+
+        citas = list(
+            self.db.scalars(stmt).all()
+        )
+
+        return [
+            cita.fecha_cita.strftime(
+                "%H:%M"
+            )
+            for cita in citas
+        ]

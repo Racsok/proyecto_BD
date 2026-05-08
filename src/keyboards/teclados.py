@@ -55,3 +55,21 @@ def teclado_medicos(medicos: list[Medico]) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         botones
     )
+
+# TECLADO DE HORAS
+def teclado_horas(horas_disponibles: list[str]):
+
+    botones = []
+
+    for hora in horas_disponibles:
+        botones.append([
+            InlineKeyboardButton(
+                text=hora,
+                callback_data=
+                f"hora_{hora}"
+            )
+        ])
+
+    return InlineKeyboardMarkup(
+        botones
+    )

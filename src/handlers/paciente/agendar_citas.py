@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 
-from datetime import datetime
-from telegram import Update, ForceReply
-from telegram.ext import ContextTypes, ConversationHandler, CallbackQueryHandler, MessageHandler, filters
+from datetime import datetime, timedelta
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram.ext import ContextTypes, ConversationHandler, CallbackQueryHandler
 from src.database.conexion import SessionLocal
 from src.repositories.repositorio_citas import RepositorioCitas
 from src.keyboards.teclados import teclado_especialidades, teclado_medicos
 from src.autenticacion.sesion import autenticador as au
 from src.utils.logger import config_logger
 from src.utils.menu_usuario import mostrar_menu_principal
+from src.utils.horarios import generar_horas_disponibles
 
 logger = config_logger(__name__)
 
@@ -17,6 +18,7 @@ logger = config_logger(__name__)
 SELECCION_ESPECIALIDAD = 1
 SELECCION_MEDICO = 2
 INGRESAR_FECHA = 3
+SELECCION_HORA = 4
 
 # INICIAR AGENDAMIENTO
 async def iniciar_agendamiento(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -147,50 +149,179 @@ async def pedir_fecha(update: Update, context: ContextTypes.DEFAULT_TYPE):
         query.data.split("_")[1]
     )
 
-    # Guardar médico en sesión temporal
+    # Guardar médico
     context.user_data[
         "medico_id"
     ] = medico_id
 
+    botones = []
+
+    # Próximos 7 días
+    for i in range(7):
+        fecha = (
+            datetime.now() +
+            timedelta(days=i)
+        ).strftime("%Y-%m-%d")
+
+        botones.append([
+            InlineKeyboardButton(
+                text=fecha,
+                callback_data=
+                f"fecha_{fecha}"
+            )
+        ])
+
     await query.edit_message_text(
         "📅 Paso 3:\n\n"
-        "Escribe la fecha y hora "
-        "en formato:\n\n"
-        "YYYY-MM-DD HH:MM\n\n"
-        "Ejemplo:\n"
-        "2026-05-20 14:30"
-    )
-
-    await query.message.reply_text(
-        "✍️ Ingresa la fecha:",
-        reply_markup=ForceReply(
-            input_field_placeholder=
-            "2026-05-20 14:30"
+        "Selecciona una fecha:",
+        reply_markup=
+        InlineKeyboardMarkup(
+            botones
         )
     )
 
     return INGRESAR_FECHA
 
+# PEDIR HORA
+async def seleccionar_fecha(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    query = update.callback_query
+
+    await query.answer()
+
+    try:
+        # Obtener fecha desde callback
+        fecha = query.data.replace(
+            "fecha_",
+            ""
+        )
+
+        logger.info(f"Fecha seleccionada: {fecha}")
+
+        # Guardar fecha temporalmente
+        context.user_data[
+            "fecha"
+        ] = fecha
+
+        # Obtener médico guardado
+        medico_id = context.user_data[
+            "medico_id"
+        ]
+
+        fecha_obj = datetime.strptime(
+            fecha,
+            "%Y-%m-%d"
+        ).date()
+
+        db = SessionLocal()
+
+        try:
+            repo = RepositorioCitas(db)
+
+            # Consultar horas ocupadas
+            horas_ocupadas = (
+                repo.obtener_horas_ocupadas(
+                    medico_id,
+                    fecha_obj
+                )
+            )
+
+            logger.info(f"Horas ocupadas: {horas_ocupadas}")
+
+            # Generar horas libres
+            horas_disponibles = (
+                generar_horas_disponibles(
+                    horas_ocupadas
+                )
+            )
+
+            if not horas_disponibles:
+
+                await query.edit_message_text(
+                    "❌ No hay horarios "
+                    "disponibles para "
+                    "esa fecha."
+                )
+
+                return ConversationHandler.END
+
+            # Crear botones dinámicos
+            botones = []
+
+            for hora in horas_disponibles:
+
+                botones.append([
+                    InlineKeyboardButton(
+                        text=hora,
+                        callback_data=
+                        f"hora_{hora}"
+                    )
+                ])
+
+            await query.edit_message_text(
+                "🕐 Paso 4:\n\n"
+                "Selecciona una hora:",
+                reply_markup=
+                InlineKeyboardMarkup(
+                    botones
+                )
+            )
+
+            return SELECCION_HORA
+
+        finally:
+            db.close()
+
+    except Exception as e:
+
+        logger.error(
+            f"Error seleccionando fecha: {e}"
+        )
+
+        await query.edit_message_text(
+            "❌ Error obteniendo "
+            "horarios disponibles."
+        )
+
+        return ConversationHandler.END
+    
 # GUARDAR CITA
 async def guardar_cita(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
-    texto_fecha = update.message.text
+    query = update.callback_query
+
+    await query.answer()
 
     try:
-        # Convertir fecha
+        # Obtener hora seleccionada
+        hora = query.data.replace(
+            "hora_",
+            ""
+        )
+
+        # Obtener datos temporales
+        fecha = context.user_data[
+            "fecha"
+        ]
+
+        medico_id = context.user_data[
+            "medico_id"
+        ]
+
+        # Construir datetime completo
         fecha_cita = datetime.strptime(
-            texto_fecha,
+            f"{fecha} {hora}",
             "%Y-%m-%d %H:%M"
         )
 
         # Validar fecha futura
         if fecha_cita <= datetime.now():
-            await update.message.reply_text(
+            await query.edit_message_text(
                 "❌ La fecha debe "
                 "ser futura."
             )
 
-            return INGRESAR_FECHA
+            return ConversationHandler.END
 
         # Obtener usuario autenticado
         datos_usuario = au.obtener_usuario(
@@ -198,18 +329,13 @@ async def guardar_cita(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         if not datos_usuario:
-            await update.message.reply_text(
+            await query.edit_message_text(
                 "⚠️ Sesión expirada."
             )
-
             return ConversationHandler.END
 
         paciente_id = datos_usuario[
             "id_usuario"
-        ]
-
-        medico_id = context.user_data[
-            "medico_id"
         ]
 
         db = SessionLocal()
@@ -217,13 +343,14 @@ async def guardar_cita(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             repo = RepositorioCitas(db)
 
+            # Crear cita
             cita = repo.crear_cita(
                 paciente_id=paciente_id,
                 medico_id=medico_id,
                 fecha_cita=fecha_cita
             )
 
-            await update.message.reply_text(
+            await query.edit_message_text(
                 "✅ ¡Cita agendada!\n\n"
                 f"🗓 Fecha: "
                 f"{cita.fecha_cita.strftime('%Y-%m-%d %H:%M')}\n"
@@ -234,38 +361,22 @@ async def guardar_cita(update: Update, context: ContextTypes.DEFAULT_TYPE):
         finally:
             db.close()
 
+        # Limpiar datos temporales
+        context.user_data.clear()
+
+        # Mostrar menú nuevamente
         await mostrar_menu_principal(
-            update.message,
+            query.message,
             datos_usuario["rol_id"]
         )
 
         return ConversationHandler.END
 
-    except ValueError:
-        logger.error(
-            "Formato de fecha inválido"
-        )
-
-        await update.message.reply_text(
-            "❌ Formato inválido.\n\n"
-            "Usa:\n"
-            "YYYY-MM-DD HH:MM"
-        )
-
-        return INGRESAR_FECHA
-
     except Exception as e:
-        logger.error(
-            f"Error guardando cita: {e}"
-        )
+        logger.error(f"Error guardando cita: {e}")
 
-        await update.message.reply_text(
+        await query.edit_message_text(
             "❌ Error agendando cita."
-        )
-
-        await mostrar_menu_principal(
-            update.message,
-            datos_usuario["rol_id"]
         )
 
         return ConversationHandler.END
@@ -279,7 +390,7 @@ async def cancelar_flujo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     if not datos_usuario:
-        await update.message.reply_text(
+        await query.message.reply_text(
             "⚠️ Sesión expirada."
         )
 
@@ -329,10 +440,16 @@ conv_agendar_cita = ConversationHandler(
         ],
         # INGRESAR FECHA
         INGRESAR_FECHA: [
-            MessageHandler(
-                filters.TEXT &
-                ~filters.COMMAND,
-                guardar_cita
+            CallbackQueryHandler(
+                seleccionar_fecha,
+                pattern=r"^fecha_\d{4}-\d{2}-\d{2}$"
+            )
+        ],
+        # SELECCIONAR HORA
+        SELECCION_HORA: [
+            CallbackQueryHandler(
+                guardar_cita,
+                pattern=r"^hora_\d{2}:\d{2}$"
             )
         ]
     },
