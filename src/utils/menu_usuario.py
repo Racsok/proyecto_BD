@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from src.keyboards.btn_menu_citas import menu_citas_medico, menu_citas_paciente
+from src.keyboards.btn_menu_citas import menu_admin, menu_citas_medico, menu_citas_paciente
 
 async def mostrar_menu_principal(mensaje, rol_id: int):
 
@@ -9,9 +9,17 @@ async def mostrar_menu_principal(mensaje, rol_id: int):
             "¿Qué deseas hacer ahora?",
             reply_markup=menu_citas_paciente()
         )
-
+        
+    elif rol_id == 2:
+        await mensaje.reply_text(
+            "¿Qué deseas hacer ahora?",
+            reply_markup=menu_admin()
+         )
+        
     elif rol_id == 3:
         await mensaje.reply_text(
             "¿Qué deseas hacer ahora?",
             reply_markup=menu_citas_medico()
         )
+    
+    

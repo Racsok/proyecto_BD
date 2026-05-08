@@ -2,7 +2,7 @@
 from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from src.models.entidades import Especialidad, Medico, Cita, Consultorio, VistaCitasProgramadas
+from src.models.entidades import Especialidad, Medico, Cita, Consultorio, VistaCitasProgramadas, VistaReporteCitasCompletadas
 from src.utils.logger import config_logger
 from datetime import datetime, time, date
 
@@ -192,3 +192,13 @@ class RepositorioCitas:
             )
             for cita in citas
         ]
+    
+    def obtener_reporte_citas_completadas(self) -> list[VistaReporteCitasCompletadas]:
+
+        stmt = (
+            select(VistaReporteCitasCompletadas)
+        )
+
+        return list(
+            self.db.scalars(stmt).all()
+        )

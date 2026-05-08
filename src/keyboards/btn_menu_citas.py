@@ -32,3 +32,21 @@ def menu_citas_medico():
             )
         ]
     ])
+
+def menu_admin():
+    return InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton(
+                "📊 Ver Reporte "
+                "Citas Completadas",
+                callback_data=
+                "reporte_citas_completadas"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                "🚪 Cerrar Sesión",
+                callback_data="logout"
+            )
+        ]
+    ])

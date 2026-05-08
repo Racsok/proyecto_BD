@@ -2,7 +2,7 @@
 
 from typing import List, Optional
 from datetime import date, datetime
-from sqlalchemy import String, Numeric, ForeignKey, CheckConstraint, text
+from sqlalchemy import DateTime, String, Numeric, ForeignKey, CheckConstraint, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -227,3 +227,23 @@ class VistaCitasProgramadas(Base):
     valor: Mapped[float]
     estado_cita: Mapped[str]
     nombre_consultorio: Mapped[str]
+
+# VISTA PARA REPORTE DE CITAS COMPLETADAS
+class VistaReporteCitasCompletadas(Base):
+
+    __tablename__ = "v_reportes_citas_completadas"
+
+    fecha_cita: Mapped[datetime] = mapped_column(DateTime, primary_key=True)
+    numero_documento_paciente: Mapped[str] = mapped_column(String(20), primary_key=True)
+    numero_tarjeta_profesional: Mapped[str] = mapped_column(String(50), primary_key=True)
+    primer_nombre_medico: Mapped[str] = mapped_column(String(50))
+    segundo_nombre_medico: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    primer_apellido_medico: Mapped[str] = mapped_column(String(50))
+    segundo_apellido_medico: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    especialidad: Mapped[str] = mapped_column(String(100))
+    primer_nombre_paciente: Mapped[str] = mapped_column(String(50))
+    segundo_nombre_paciente: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    primer_apellido_paciente: Mapped[str] = mapped_column(String(50))
+    segundo_apellido_paciente: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    tipo_documento_paciente: Mapped[str] = mapped_column(String(10))
+    valor: Mapped[float] = mapped_column(Numeric(10, 2))

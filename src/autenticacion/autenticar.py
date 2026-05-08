@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from sqlalchemy import select
-from src.models.entidades import Usuario
+from src.models.entidades import Administrador, Usuario
 from src.database.conexion import SessionLocal
 from src.utils.logger import config_logger
 
@@ -23,6 +23,9 @@ class Autenticar:
         #
 
         self.usuarios_activos: dict[int, dict] = {}
+
+        # Usuarios admin pendientes de contraseña
+        self.admin_pendientes = {}
 
     # VALIDAR DOCUMENTO
     def validar_documento(self, telegram_id: int, documento: str) -> int:
@@ -64,6 +67,21 @@ class Autenticar:
                 
                 logger.info(f"ID médico asociado: {usuario.medico.id_medico}")
 
+            # SI ES ADMINISTRADOR
+            if (usuario.rol.nombre_rol == "ADMINISTRATIVO"):
+
+                logger.info(
+                    "Administrador detectado. "
+                    "Esperando contraseña."
+                )
+
+                self.admin_pendientes[
+                    telegram_id
+                ] = datos_sesion
+
+                # Retornar código especial
+                return 99
+
             # Guardar sesión
             self.usuarios_activos[telegram_id] = datos_sesion
 
@@ -77,6 +95,66 @@ class Autenticar:
 
         finally:
             db.close()
+
+
+    # VALIDAR CONTRASEÑA ADMIN
+    def validar_password_admin(self, telegram_id: int, password: str) -> bool:
+
+        db = SessionLocal()
+
+        try:
+            if (telegram_id not in self.admin_pendientes):
+                logger.warning("No hay admin pendiente")
+                return False
+
+            datos_admin = (
+                self.admin_pendientes[
+                    telegram_id
+                ]
+            )
+
+            stmt = (
+                select(Administrador)
+                .where(Administrador.usuario_id == datos_admin["id_usuario"])
+            )
+
+            admin = db.scalar(stmt)
+
+            if not admin:
+                logger.warning("Administrador no encontrado")
+                return False
+
+            # VALIDAR PASSWORD
+            if admin.contrasenia != password:
+                logger.warning("Contraseña incorrecta")
+                return False
+
+            # LOGIN EXITOSO
+            self.usuarios_activos[
+                telegram_id
+            ] = datos_admin
+
+            # Eliminar pendiente
+            del self.admin_pendientes[
+                telegram_id
+            ]
+
+            logger.info(f"Administrador autenticado: {telegram_id}")
+
+            return True
+
+        except Exception as e:
+            logger.error(f"Error validando admin: {e}")
+            return False
+
+        finally:
+            db.close()
+
+    # VERIFICAR SI ESPERA PASSWORD
+    def admin_esperando_password(self, telegram_id: int) -> bool:
+        return (
+            telegram_id in self.admin_pendientes
+        )
 
     # OBTENER USUARIO
     def obtener_usuario(self, telegram_id: int) -> dict | None:

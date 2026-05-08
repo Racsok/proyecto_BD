@@ -17,7 +17,8 @@ roles,
 usuarios,
 especialidades,
 medicos,
-consultorios
+consultorios,
+administradores
 TO bot_citas;
 
 GRANT USAGE, SELECT
@@ -32,6 +33,10 @@ TO bot_citas;
 -- Dar permiso para las vistas:
 GRANT SELECT
 ON v_citas_programadas
+TO bot_citas;
+
+GRANT SELECT
+ON v_reportes_citas_completadas
 TO bot_citas;
 
 -- Ver todos los permisos de sus usuarios:
