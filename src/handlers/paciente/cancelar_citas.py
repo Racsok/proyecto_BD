@@ -6,6 +6,7 @@ from src.database.conexion import SessionLocal
 from src.repositories.repositorio_citas import RepositorioCitas
 from src.autenticacion.sesion import autenticador as au
 from src.utils.logger import config_logger
+from src.utils.menu_usuario import mostrar_menu_principal
 
 logger = config_logger(__name__)
 
@@ -97,6 +98,11 @@ async def listar_citas_para_cancelar(update: Update, context: ContextTypes.DEFAU
             "❌ Error obteniendo citas."
         )
 
+        await mostrar_menu_principal(
+            query.message,
+            datos_usuario["rol_id"]
+        )
+
     finally:
         db.close()
 
@@ -147,6 +153,11 @@ async def confirmar_cancelacion(update: Update, context: ContextTypes.DEFAULT_TY
                 f"✅ La cita ha sido cancelada."
             )
 
+            await mostrar_menu_principal(
+                query.message,
+                datos_usuario["rol_id"]
+            )
+
             return
 
         # No se pudo cancelar
@@ -155,11 +166,21 @@ async def confirmar_cancelacion(update: Update, context: ContextTypes.DEFAULT_TY
             show_alert=True
         )
 
+        await mostrar_menu_principal(
+            query.message,
+            datos_usuario["rol_id"]
+        )
+
     except Exception as e:
         logger.error(f"Error cancelando cita: {e}")
 
         await query.edit_message_text(
             "❌ Error cancelando cita."
+        )
+
+        await mostrar_menu_principal(
+            query.message,
+            datos_usuario["rol_id"]
         )
 
     finally:

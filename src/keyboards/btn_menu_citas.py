@@ -10,6 +10,12 @@ def menu_citas_paciente():
         ],
         [
             InlineKeyboardButton("❌ Cancelar Cita", callback_data="cancelar")
+        ],
+        [
+            InlineKeyboardButton(
+                "🚪 Cerrar Sesión",
+                callback_data="logout"
+            )
         ]
     ])
 
@@ -18,5 +24,11 @@ def menu_citas_medico():
         # Fila 1: Un botón (100% de ancho)
         [
             InlineKeyboardButton("📋 Ver Citas Programadas", callback_data="ver_citas_medico")
+        ],
+        [
+            InlineKeyboardButton(
+                "🚪 Cerrar Sesión",
+                callback_data="logout"
+            )
         ]
     ])

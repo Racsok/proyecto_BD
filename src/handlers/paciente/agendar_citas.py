@@ -8,6 +8,7 @@ from src.repositories.repositorio_citas import RepositorioCitas
 from src.keyboards.teclados import teclado_especialidades, teclado_medicos
 from src.autenticacion.sesion import autenticador as au
 from src.utils.logger import config_logger
+from src.utils.menu_usuario import mostrar_menu_principal
 
 logger = config_logger(__name__)
 
@@ -202,6 +203,11 @@ async def guardar_cita(update: Update, context: ContextTypes.DEFAULT_TYPE):
         finally:
             db.close()
 
+        await mostrar_menu_principal(
+            update.message,
+            datos_usuario["rol_id"]
+        )
+
         return ConversationHandler.END
 
     except ValueError:
@@ -226,10 +232,27 @@ async def guardar_cita(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "❌ Error agendando cita."
         )
 
+        await mostrar_menu_principal(
+            update.message,
+            datos_usuario["rol_id"]
+        )
+
         return ConversationHandler.END
 
 # CANCELAR FLUJO
 async def cancelar_flujo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    # Obtener usuario autenticado
+    datos_usuario = au.obtener_usuario(
+        update.effective_user.id
+    )
+
+    if not datos_usuario:
+        await update.message.reply_text(
+            "⚠️ Sesión expirada."
+        )
+
+        return ConversationHandler.END
 
     query = update.callback_query
 
@@ -238,6 +261,11 @@ async def cancelar_flujo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.edit_message_text(
         "❌ Agendamiento cancelado."
     )
+
+    await mostrar_menu_principal(
+            update.message,
+            datos_usuario["rol_id"]
+        )
 
     return ConversationHandler.END
 

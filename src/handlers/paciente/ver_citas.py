@@ -5,6 +5,7 @@ from src.database.conexion import SessionLocal
 from src.repositories.repositorio_citas import RepositorioCitas
 from src.autenticacion.sesion import autenticador as au
 from src.utils.logger import config_logger
+from src.utils.menu_usuario import mostrar_menu_principal
 
 
 logger = config_logger(__name__)
@@ -55,6 +56,11 @@ async def mostrar_citas_paciente(update: Update, context: ContextTypes.DEFAULT_T
                 "📋 No tienes "
                 "citas programadas."
             )
+            await mostrar_menu_principal(
+                query.message,
+                datos_usuario["rol_id"]
+            )
+
             return
 
         logger.info(f"Total citas: {len(citas)}")
@@ -91,12 +97,22 @@ async def mostrar_citas_paciente(update: Update, context: ContextTypes.DEFAULT_T
             texto_citas
         )
 
+        await mostrar_menu_principal(
+            query.message,
+            datos_usuario["rol_id"]
+        )
+
     except Exception as e:
         logger.error(
             f"Error mostrando citas: {e}"
         )
         await query.edit_message_text(
             "❌ Error obteniendo citas."
+        )
+
+        await mostrar_menu_principal(
+            query.message,
+            datos_usuario["rol_id"]
         )
 
     finally:
